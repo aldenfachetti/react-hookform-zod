@@ -1,3 +1,4 @@
+import "./styles/global.css";
 import { useState } from "react";
 import { useForm, FormProvider, useFieldArray } from "react-hook-form";
 import { PlusCircle, XCircle } from "lucide-react";
@@ -5,6 +6,14 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Form } from "./components/Form";
 import { supabase } from "./lib/supabase";
+
+/** TO DO
+ *
+ * [ X ] Validation / Transformation
+ * [ X ] Filed Arrays
+ * [ X ] Upload of files
+ * [ X ] Composition Pattern
+ */
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5mb
 const ACCEPTED_IMAGE_TYPES = [
@@ -15,6 +24,20 @@ const ACCEPTED_IMAGE_TYPES = [
 ];
 
 const createUserSchema = z.object({
+  avatar: z
+    .instanceof(FileList)
+    .refine((files) => !!files.item(0), "A imagem de perfil é obrigatória")
+    .refine(
+      (files) => files.item(0)!.size <= MAX_FILE_SIZE,
+      `Tamanho máximo de 5MB`
+    )
+    .refine(
+      (files) => ACCEPTED_IMAGE_TYPES.includes(files.item(0)!.type),
+      "Formato de imagem inválido"
+    )
+    .transform((files) => {
+      return files.item(0)!;
+    }),
   name: z
     .string()
     .nonempty({
@@ -54,20 +77,6 @@ const createUserSchema = z.object({
     )
     .min(3, {
       message: "Pelo menos 3 tecnologias devem ser informadas.",
-    }),
-  avatar: z
-    .instanceof(FileList)
-    .refine((files) => !!files.item(0), "A imagem de perfil é obrigatória")
-    .refine(
-      (files) => files.item(0)!.size <= MAX_FILE_SIZE,
-      `Tamanho máximo de 5MB`
-    )
-    .refine(
-      (files) => ACCEPTED_IMAGE_TYPES.includes(files.item(0)!.type),
-      "Formato de imagem inválido"
-    )
-    .transform((files) => {
-      return files.item(0)!;
     }),
 });
 
@@ -115,33 +124,54 @@ export default function App() {
   }
 
   return (
-    <main className="h-screen flex flex-row gap-6 items-center justify-center">
+    <main className="h-screen bg-zinc-950 text-zinc-300 flex flex-row gap-6 items-center justify-center">
       <FormProvider {...createUserForm}>
         <form
           onSubmit={handleSubmit(createUser)}
           className="flex flex-col gap-4 w-full max-w-xs"
         >
           <Form.Field>
-            <Form.Label htmlFor="avatar">Avatar</Form.Label>
+            <Form.Label htmlFor="avatar" className="text-yellow-600">
+              Avatar
+            </Form.Label>
 
-            <Form.Input type="file" name="avatar" />
+            <Form.Input
+              type="file"
+              className="border borderviolet-500 rounded bg-zinc-900 text-violet-500"
+              name="avatar"
+            />
             <Form.ErrorMessage field="avatar" />
           </Form.Field>
 
           <Form.Field>
-            <Form.Label htmlFor="name">Nome</Form.Label>
-            <Form.Input type="name" name="name" />
+            <Form.Label htmlFor="name" className="text-yellow-600">
+              Nome
+            </Form.Label>
+            <Form.Input
+              type="name"
+              className="border border-zinc-800 shadow-sm rounded h-10 px-3 bg-zinc-900 text-white"
+              name="name"
+            />
             <Form.ErrorMessage field="name" />
           </Form.Field>
 
           <Form.Field>
-            <Form.Label htmlFor="email">E-mail</Form.Label>
-            <Form.Input type="email" name="email" />
+            <Form.Label htmlFor="email" className="text-yellow-600">
+              E-mail
+            </Form.Label>
+            <Form.Input
+              type="email"
+              className="border border-zinc-800 shadow-sm rounded h-10 px-3 bg-zinc-900 text-white"
+              name="email"
+            />
             <Form.ErrorMessage field="email" />
           </Form.Field>
 
           <Form.Field>
-            <Form.Label htmlFor="password">
+            <Form.Label
+              htmlFor="password"
+              className="flex flex-row justify-between items-center text-yellow-600"
+            >
               Senha
               {isPasswordStrong ? (
                 <span className="text-xs text-emerald-600">Senha forte</span>
@@ -149,12 +179,16 @@ export default function App() {
                 <span className="text-xs text-red-500">Senha fraca</span>
               )}
             </Form.Label>
-            <Form.Input type="password" name="password" />
+            <Form.Input
+              type="password"
+              className="border border-zinc-800 shadow-sm rounded h-10 px-3 bg-zinc-900 text-white"
+              name="password"
+            />
             <Form.ErrorMessage field="password" />
           </Form.Field>
 
           <Form.Field>
-            <Form.Label>
+            <Form.Label className="flex flex-row justify-between items-center text-yellow-600">
               Tecnologias
               <button
                 type="button"
